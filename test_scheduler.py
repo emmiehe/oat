@@ -16,30 +16,32 @@ class TestScheduler(unittest.TestCase):
     )
     job_habit = Job("Daily puzzle", next_year, timedelta(minutes=30), daily_repeat=1)
 
-    def test_empty(self):
-        scheduler = Scheduler([])
+    def schedule(self, jobs):
+        scheduler = Scheduler(jobs)
         chunks = scheduler.schedule()
-        self.assertEqual(chunks, [])
+        # verify we do the jobs in the right chunk amount
+        count = sum([math.ceil(job.duration / job.work_unit) for job in jobs])
+        self.assertTrue(len(chunks) == count)
+        # verify we finish before deadlines
+        self.assertTrue(all(chunk.end <= chunk.job.deadline for chunk in chunks))
 
-    def schedule_single_job(self, job):
-        scheduler = Scheduler([job])
-        chunks = scheduler.schedule()
-        # verify we do this job in one chunk
-        self.assertTrue(len(chunks) == math.ceil(job.duration / job.work_unit))
-        # verify we finish before deadline
-        self.assertTrue(chunks[-1].end <= job.deadline)
+    def test_empty(self):
+        self.schedule([])
 
     def test_single_job_small(self):
-        self.schedule_single_job(self.job_small)
+        self.schedule([self.job_small])
 
     def test_single_job_medium(self):
-        self.schedule_single_job(self.job_medium)
+        self.schedule([self.job_medium])
 
     def test_single_job_big(self):
-        self.schedule_single_job(self.job_big)
+        self.schedule([self.job_big])
 
     def test_single_job_habit(self):
-        self.schedule_single_job(self.job_habit)
+        self.schedule([self.job_habit])
+
+    def test_mixed_jobs(self):
+        self.schedule([self.job_small, self.job_medium])
 
 
 if __name__ == "__main__":

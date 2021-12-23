@@ -128,7 +128,7 @@ class Scheduler:
                 self.daily_end_hour,
             ),
         )
-        bins = [[] for i in range((end - datetime.now()).days + 2)]
+        bins = [[] for i in range((end - datetime.now()).days + 1)]
         for job_chunks in chunks:
             job_deadline = min(job_chunks[0].job.deadline, end)
             index = job_chunks[0].index
@@ -138,10 +138,14 @@ class Scheduler:
                 if chunk.index != index:
                     bin_index -= 1
                     index = chunk.index
-                chunk.end = end - timedelta(days=(len(bins) - 1 - bin_index))
+                chunk.end = min(
+                    end - timedelta(days=(len(bins) - 1 - bin_index)),
+                    chunk.job.deadline,
+                )
                 bins[bin_index].append(chunk)
+            bins[bin_index].sort(key=lambda c: c.end, reverse=True)
 
-        print(bins)
+        # print(bins)
         chunks = []
         for i in range(len(bins) - 1, -1, -1):
             if not bins[i]:
@@ -156,6 +160,8 @@ class Scheduler:
                     else:
                         bins[i - 1].append(chunk)  # cp this chunk to next bin
                 else:
+                    if curr_end > chunk.end:
+                        curr_end = chunk.end
                     chunk.end = curr_end
                     chunk.start = curr_end - chunk.duration
                     curr_end -= chunk.duration + self.break_unit
@@ -168,7 +174,7 @@ class Scheduler:
                 "to finish.".format((datetime.now() - chunks[0].start))
             )
         # assert chunks[0].start >= datetime.now()
-        return chunks
+        return deque(chunks)
 
     def add_job(self, job):
         self.jobs.append(job)
@@ -176,13 +182,22 @@ class Scheduler:
 
     def schedule(self):
         chunks = self.make_chunks()
-        print("### Chunks: ### \n")
-        for chunk in chunks:
-            print(chunk)
+        # print("### Chunks: ### \n")
+        # for chunk in chunks:
+        #     print(chunk)
         return chunks
+
+    def get_chunk(self, chunks):
+        return chunks.popleft()
 
 
 if __name__ == "__main__":
     app = Job("Write Scheduler prototype", datetime(2021, 12, 24), timedelta(hours=4))
     scheduler = Scheduler([app])
-    scheduler.schedule()
+    chunks = scheduler.schedule()
+    chunk = scheduler.get_chunk(chunks)
+    print(
+        "Your next task is: [{}](start: {} - end: {})".format(
+            chunk.job.name, chunk.start, chunk.end
+        )
+    )
