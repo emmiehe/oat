@@ -74,9 +74,6 @@ class Chunk:
         )
 
 
-now = datetime.now()
-
-
 class Scheduler:
     # todo: pause, complete, jobs update
     def __init__(
@@ -192,12 +189,30 @@ class Scheduler:
 
 
 if __name__ == "__main__":
-    app = Job("Write Scheduler prototype", datetime(2021, 12, 24), timedelta(hours=4))
-    scheduler = Scheduler([app])
-    chunks = scheduler.schedule()
-    chunk = scheduler.get_chunk(chunks)
-    print(
-        "Your next task is: [{}](start: {} - end: {})".format(
-            chunk.job.name, chunk.start, chunk.end
-        )
+    now = datetime.now()
+    next_day = now + timedelta(days=1)
+    next_week = now + timedelta(weeks=1)
+    next_month = now + timedelta(weeks=4)
+    next_year = now + timedelta(weeks=52)
+    job_small = Job("One paragraph email", next_week, timedelta(minutes=30))
+    job_medium = Job("Written assignment", next_day, timedelta(hours=4))
+    job_big = Job(
+        "Coding project", next_month, timedelta(hours=60), work_unit=timedelta(hours=2)
     )
+    job_habit = Job(
+        "Daily puzzle",
+        next_month,
+        timedelta(hours=10),
+        work_unit=timedelta(minutes=30),
+        daily_repeat=1,
+    )
+
+    scheduler = Scheduler([job_small, job_medium, job_big, job_habit])
+    chunks = scheduler.schedule()
+    while chunks:
+        chunk = scheduler.get_chunk(chunks)
+        print(
+            "Your next task is: [{}](start: {} - end: {})".format(
+                chunk.job.name, chunk.start, chunk.end
+            )
+        )

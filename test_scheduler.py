@@ -14,7 +14,13 @@ class TestScheduler(unittest.TestCase):
     job_big = Job(
         "Coding project", next_month, timedelta(hours=40), work_unit=timedelta(hours=2)
     )
-    job_habit = Job("Daily puzzle", next_year, timedelta(minutes=30), daily_repeat=1)
+    job_habit = Job(
+        "Daily puzzle",
+        next_year,
+        timedelta(hours=100),
+        work_unit=timedelta(minutes=30),
+        daily_repeat=1,
+    )
 
     def schedule(self, jobs):
         scheduler = Scheduler(jobs)
