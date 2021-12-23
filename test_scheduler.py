@@ -41,7 +41,7 @@ class TestScheduler(unittest.TestCase):
         self.schedule([self.job_habit])
 
     def test_mixed_jobs(self):
-        self.schedule([self.job_small, self.job_medium])
+        self.schedule([self.job_small, self.job_medium, self.job_big, self.job_habit])
 
 
 if __name__ == "__main__":
